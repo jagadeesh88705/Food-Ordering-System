@@ -1,0 +1,257 @@
+-- MySQL Workbench Forward Engineering
+
+SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
+SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
+SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
+
+-- -----------------------------------------------------
+-- Schema mydbforfood
+-- -----------------------------------------------------
+
+-- -----------------------------------------------------
+-- Schema mydbforfood
+-- -----------------------------------------------------
+CREATE SCHEMA IF NOT EXISTS `mydbforfood` DEFAULT CHARACTER SET utf8 ;
+SHOW WARNINGS;
+USE `mydbforfood` ;
+
+-- -----------------------------------------------------
+-- Table `mydbforfood`.`CustomerType`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydbforfood`.`CustomerType` (
+  `type` VARCHAR(45) NOT NULL,
+  PRIMARY KEY (`type`))
+ENGINE = InnoDB;
+
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- Table `mydbforfood`.`Customer`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydbforfood`.`Customer` (
+  `Customerid` INT NOT NULL AUTO_INCREMENT,
+  `Name` VARCHAR(45) NOT NULL,
+  `Email` VARCHAR(45) NOT NULL,
+  `phonenumber` VARCHAR(10) NOT NULL,
+  `role` VARCHAR(45) NULL COMMENT 'True if Hotel Owner or else false',
+  `password` VARCHAR(45) NULL,
+ 
+  PRIMARY KEY (`Customerid`, `phonenumber`),
+  INDEX `type_idx` (`role` ASC) VISIBLE,
+  INDEX `fk_Customer_Customer1_idx` (`Customer_Customerid` ASC, `Customer_phonenumber` ASC) VISIBLE,
+  CONSTRAINT `type`
+    FOREIGN KEY (`role`)
+    REFERENCES `mydbforfood`.`CustomerType` (`type`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_Customer_Customer1`
+    FOREIGN KEY (`Customer_Customerid` , `Customer_phonenumber`)
+    REFERENCES `mydbforfood`.`Customer` (`Customerid` , `phonenumber`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- Table `mydbforfood`.`Order`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydbforfood`.`Order` (
+  `Orderid` INT NOT NULL AUTO_INCREMENT,
+  `Customerid` INT NOT NULL,
+  `Restaurant id` INT NOT NULL,
+  `Total amount` INT NULL,
+  `Orderstatus` VARCHAR(10) NULL COMMENT '*pending\n*delivered\n*preparing',
+  `Orderdate` DATETIME NULL,
+  PRIMARY KEY (`Orderid`, `Customerid`, `Restaurant id`),
+  INDEX `Customerid_idx` (`Customerid` ASC) VISIBLE,
+  INDEX `Restaurentid_idx` (`Restaurant id` ASC) VISIBLE,
+  CONSTRAINT `Customerid`
+    FOREIGN KEY (`Customerid`)
+    REFERENCES `mydbforfood`.`Customer` (`Customerid`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `Restaurentid`
+    FOREIGN KEY (`Restaurant id`)
+    REFERENCES `mydbforfood`.`Restaurant` (`Restaurantid`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- Table `mydbforfood`.`Food Item`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydbforfood`.`Food Item` (
+  `foodid` INT NOT NULL AUTO_INCREMENT,
+  `Item name` VARCHAR(45) NULL,
+  `Base price` INT NULL,
+  `Description` INT NULL,
+  PRIMARY KEY (`foodid`))
+ENGINE = InnoDB;
+
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- Table `mydbforfood`.`Menu`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydbforfood`.`Menu` (
+  `Menuid` INT NOT NULL AUTO_INCREMENT,
+  `Foodid` INT NOT NULL,
+  `Restaurantid` INT NOT NULL,
+  `Priceadjustment` INT NULL COMMENT 'Price is adjusted from base price',
+  `Description` VARCHAR(45) NULL COMMENT 'Description as per Restaurent',
+  `Quantity` VARCHAR(45) NULL,
+  PRIMARY KEY (`Menuid`, `Foodid`, `Restaurantid`),
+  INDEX `Foodid_idx` (`Foodid` ASC) VISIBLE,
+  INDEX `Hotelid_idx` (`Restaurantid` ASC) VISIBLE,
+  CONSTRAINT `Foodid`
+    FOREIGN KEY (`Foodid`)
+    REFERENCES `mydbforfood`.`Food Item` (`foodid`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `Hotelid`
+    FOREIGN KEY (`Restaurantid`)
+    REFERENCES `mydbforfood`.`Restaurant` (`Restaurantid`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- Table `mydbforfood`.`Addon`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydbforfood`.`Addon` (
+  `Addonid` INT NOT NULL AUTO_INCREMENT,
+  `Menuid` INT NOT NULL,
+  `Add-on name` VARCHAR(45) NULL,
+  `Price` INT NULL,
+  PRIMARY KEY (`Addonid`, `Menuid`),
+  INDEX `Menuid_idx` (`Menuid` ASC) VISIBLE,
+  CONSTRAINT `Menuid`
+    FOREIGN KEY (`Menuid`)
+    REFERENCES `mydbforfood`.`Menu` (`Menuid`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- Table `mydbforfood`.`discount`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydbforfood`.`discount` (
+  `iddiscount` INT NOT NULL AUTO_INCREMENT,
+  `menuid` INT NOT NULL,
+  `discount` FLOAT NULL,
+  `Startdate` DATETIME NULL,
+  `enddate` DATETIME NULL,
+  PRIMARY KEY (`iddiscount`, `menuid`),
+  INDEX `menuid_idx` (`menuid` ASC) VISIBLE,
+  CONSTRAINT `menuid discount`
+    FOREIGN KEY (`menuid`)
+    REFERENCES `mydbforfood`.`Menu` (`Menuid`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- Table `mydbforfood`.`Orderdetail`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydbforfood`.`Orderdetail` (
+  `Orderdetailid` INT NOT NULL AUTO_INCREMENT,
+  `Orderid` INT NOT NULL,
+  `Menuid` INT NOT NULL,
+  `Addonid` INT NOT NULL,
+  `quantity` INT NULL,
+  `flat amount` INT NULL,
+  `discountid` INT NOT NULL,
+  `Total amount` FLOAT NULL,
+  PRIMARY KEY (`Orderdetailid`, `Orderid`, `Menuid`, `Addonid`, `discountid`),
+  INDEX `Orderidindetail_idx` (`Orderid` ASC) VISIBLE,
+  INDEX `Menuid_idx` (`Menuid` ASC) VISIBLE,
+  INDEX `Addon id_idx` (`Addonid` ASC) VISIBLE,
+  INDEX `discountid_idx` (`discountid` ASC) VISIBLE,
+  CONSTRAINT `Orderidindetail`
+    FOREIGN KEY (`Orderid`)
+    REFERENCES `mydbforfood`.`Order` (`Orderid`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `Menuid orderdetail`
+    FOREIGN KEY (`Menuid`)
+    REFERENCES `mydbforfood`.`Menu` (`Menuid`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `Addon id`
+    FOREIGN KEY (`Addonid`)
+    REFERENCES `mydbforfood`.`Addon` (`Addonid`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `discountid`
+    FOREIGN KEY (`discountid`)
+    REFERENCES `mydbforfood`.`discount` (`iddiscount`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- Table `mydbforfood`.`Review`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydbforfood`.`Review` (
+  `review id` INT NOT NULL,
+  `Orderid` INT NOT NULL,
+  `Rating` FLOAT NULL,
+  `review` VARCHAR(255) NULL,
+  `restaurentid` INT NOT NULL,
+  PRIMARY KEY (`review id`, `Orderid`, `restaurentid`),
+  INDEX `orderid_idx` (`Orderid` ASC) VISIBLE,
+  INDEX `restid_idx` (`restaurentid` ASC) VISIBLE,
+  CONSTRAINT `orderid`
+    FOREIGN KEY (`Orderid`)
+    REFERENCES `mydbforfood`.`Orderdetail` (`Orderdetailid`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `restid`
+    FOREIGN KEY (`restaurentid`)
+    REFERENCES `mydbforfood`.`Restaurant` (`Restaurantid`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- Table `mydbforfood`.`Restaurant`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydbforfood`.`Restaurant` (
+  `Restaurantid` INT NOT NULL AUTO_INCREMENT,
+  `Name` VARCHAR(45) NULL,
+  `Location` VARCHAR(45) NULL,
+  `Rating` INT NOT NULL,
+  `Ownerid` INT NULL,
+  PRIMARY KEY (`Restaurantid`, `Rating`),
+  INDEX `Ownerid_idx` (`Ownerid` ASC) VISIBLE,
+  INDEX `ratingid_idx` (`Rating` ASC) VISIBLE,
+  CONSTRAINT `Ownerid`
+    FOREIGN KEY (`Ownerid`)
+    REFERENCES `mydbforfood`.`Customer` (`Customerid`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `ratingid`
+    FOREIGN KEY (`Rating`)
+    REFERENCES `mydbforfood`.`Review` (`review id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+SHOW WARNINGS;
+
+SET SQL_MODE=@OLD_SQL_MODE;
+SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
+SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
